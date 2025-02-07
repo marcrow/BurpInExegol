@@ -85,7 +85,7 @@ fi
 # Part 2: Generate a follow-up script for Docker setup
 
 # Define the follow-up script file
-FOLLOW_UP_SCRIPT="$USER_HOME/setup_in_docker.sh"
+FOLLOW_UP_SCRIPT="$TARGET_DIR/setup_in_docker.sh"
 cat << EOF > "$FOLLOW_UP_SCRIPT"
 #!/bin/bash
 
