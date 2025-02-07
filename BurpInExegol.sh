@@ -115,7 +115,25 @@ ln -s /opt/my-resources/BurpSuitePro "/home/\$USER_NAME/BurpSuitePro"
 chown -R "\$USER_NAME" /opt/my-resources/.java /opt/my-resources/.BurpSuite /opt/my-resources/BurpSuitePro
 
 # Create a persistent alias for BurpSuitePro
-echo "alias b='sudo -u \$USER_NAME /home/\$USER_NAME/BurpSuitePro/BurpSuitePro'" >> /home/\$USER_NAME/.bashrc
+shell_name=$(env | grep EXEGOL_START_SHELL | cut -d "=" -f2)
+
+if [ -z "$shell_name" ]; then
+    echo "Error - the EXEGOL_START_SHELL global environment is not set"
+    echo "Try PYENV_SHELL var instead..."
+    shell_name=$(env | grep PYENV_SHELL | cut -d "=" -f2)
+    if [ -z "$shell_name" ]; then
+        echo "Error - the PYENV_SHELL global environment is not set"
+        echo "Abort"
+        exit
+    fi
+fi
+
+rc_file="$HOME/."$shell_name"rc"
+
+echo "alias b='sudo -u $USER_NAME /home/$USER_NAME/BurpSuitePro/BurpSuitePro'" >> "$rc_file"
+echo "alias myburp='sudo -u $USER_NAME /home/$USER_NAME/BurpSuitePro/BurpSuitePro'" >> "$rc_file"
+
+echo "Alias b and myburp pushed in $rc_file"
 EOF
 
 # Make the follow-up script executable
