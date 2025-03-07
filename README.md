@@ -50,6 +50,3 @@ This will configure the environment inside the container and allow BurpSuitePro 
 ## Notes
 - The script is designed to be idempotent. If resources are already copied, it will skip them.
 - The alias `b` and `myburp` allows launching BurpSuitePro conveniently inside the container.
-- Any issues with Docker detection can be debugged by manually checking `/proc/1/cgroup` and `hostname`.
-
-

@@ -21,7 +21,8 @@ echo "User home directory: $USER_HOME"
 
 USER_JAVA="$USER_HOME/.java"
 USER_BurpSuiter="$USER_HOME/.BurpSuite"
-BurpsuitePro="/opt/BurpSuitePro"
+BurpsuitePro="/home/marc-antoine/BurpSuitePro"
+
 
 # Define target directory
 TARGET_DIR="$USER_HOME/.exegol/my-resources/"
@@ -80,6 +81,9 @@ if [ -d "$BurpsuitePro" ]; then
         chown $USER_NAME $BURPPRO_DIR
         check_success chown $USER_NAME $BURPPRO_DIR
     fi
+else
+    echo "Error BurpsuitePro directory not found"
+
 fi
 
 # Part 2: Generate a follow-up script for Docker setup
@@ -90,17 +94,13 @@ cat << EOF > "$FOLLOW_UP_SCRIPT"
 #!/bin/bash
 
 # Check if running inside Docker
-if [ "\$(ps -p 1 -o comm=)" != "systemd" ] && \
-   [ "\$(hostname | grep -cE '^[a-f0-9]{12}$')" -eq 1 ]; then
+if [ -d /.exegol ]; then
     echo "Your environment will be modified."
 else
-    echo "Not running inside Docker. Exiting."
+    echo "Not running inside Exegol instance. Exiting."
     exit 1
 fi
-if ! grep -q docker /proc/1/cgroup; then
-    echo "Not running inside Docker. Exiting."
-    exit 1
-fi
+
 
 # Create a new user with the detected username
 USER_NAME="$USER_NAME"
@@ -114,26 +114,27 @@ ln -s /opt/my-resources/BurpSuitePro "/home/\$USER_NAME/BurpSuitePro"
 # Set ownership of the resources to the new user
 chown -R "\$USER_NAME" /opt/my-resources/.java /opt/my-resources/.BurpSuite /opt/my-resources/BurpSuitePro
 
-# Create a persistent alias for BurpSuitePro
-shell_name=$(env | grep EXEGOL_START_SHELL | cut -d "=" -f2)
 
-if [ -z "$shell_name" ]; then
-    echo "Error - the EXEGOL_START_SHELL global environment is not set"
-    echo "Try PYENV_SHELL var instead..."
-    shell_name=$(env | grep PYENV_SHELL | cut -d "=" -f2)
-    if [ -z "$shell_name" ]; then
-        echo "Error - the PYENV_SHELL global environment is not set"
-        echo "Abort"
-        exit
+
+
+test=("bash" "zsh")
+
+for shell in \${test[@]}; do
+    rc_file="\$HOME/."\$shell"rc"
+    if [ -f \$rc_file ]; then
+        echo -n "Add burp shortcut in $shellrc"
+        echo "alias b='sudo -u $USER_NAME /home/$USER_NAME/BurpSuitePro/BurpSuitePro'" >> "\$rc_file"
+        echo "alias myburp='sudo -u $USER_NAME /home/$USER_NAME/BurpSuitePro/BurpSuitePro'" >> "\$rc_file"
+        cmd_found=1
     fi
-fi
 
-rc_file="$HOME/."$shell_name"rc"
+done
 
-echo "alias b='sudo -u $USER_NAME /home/$USER_NAME/BurpSuitePro/BurpSuitePro'" >> "$rc_file"
-echo "alias myburp='sudo -u $USER_NAME /home/$USER_NAME/BurpSuitePro/BurpSuitePro'" >> "$rc_file"
+if (( cmd_found == 0 )); then
+    echo "no shell found, myburp alias not created"
+fi 
 
-echo "Alias b and myburp pushed in $rc_file"
+
 EOF
 
 # Make the follow-up script executable
